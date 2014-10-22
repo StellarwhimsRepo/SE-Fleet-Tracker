@@ -15,7 +15,7 @@ Fleet and Faction Ownership Tracking
 
 This powershell script is used by changing the variables at the top of the 'ps1' file to match your server settings. 
 
-The default settings will track player owned assets (owned beacons) per fleet with world coordinates for players active within the last 14 days.
+The default settings will track player owned assets (owned beacons) per faction with world coordinates for players active within the last 14 days.  This also tests a fleet classification system with an option to notify the faction via their public info field.
 
 Be sure to shut your space engineers server down before running this script!!!
 
