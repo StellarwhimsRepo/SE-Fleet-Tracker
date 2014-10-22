@@ -17,6 +17,13 @@ This powershell script is used by changing the variables at the top of the 'ps1'
 
 The default settings will track player owned assets (owned beacons) per faction with world coordinates for players active within the last 14 days.  This also tests a fleet classification system with an option to notify the faction via their public info field.
 
+2 Faction members - Fleet License: Association
+3 Faction members - Fleet License: Corporation
+5 Faction members - Fleet License: Trade Federation
+8 or more members - Fleet License: Military Coalition
+
+The licenses do nothing ..... for now.
+
 Be sure to shut your space engineers server down before running this script!!!
 
 Use the windows shortcut provided to run. Be sure the shortcut and the script file are in the same folder.
