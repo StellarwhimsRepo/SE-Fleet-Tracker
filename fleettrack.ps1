@@ -27,7 +27,7 @@
 
     $nodePIDs = $myXML2.SelectNodes("//Identities"  , $ns2)
     $nodeFactions = $myXML2.SelectNodes("//Factions/Factions/MyObjectBuilder_Faction" , $ns2)
-    $nodeClientID=$myXML2.SelectNodes("//ConnectedPlayers/dictionary/item | //DisconnectedPlayers/dictionary" , $ns2)
+    $nodeClientID=$myXML2.SelectNodes("//AllPlayersData/dictionary" , $ns2)
 
 
         #list ships owned
@@ -41,7 +41,7 @@
         Add-Content -path $ownedpath -Value "=="
         Add-Content -path $ownedpath -Value "[$($faction.Name)] [$($faction.Tag)] Members and ships owned:"
         ForEach($member in $factionmembers){
-            $nodeclient = $nodeClientID.SelectSingleNode("item[Value='$($member.PlayerId)']" , $ns2)
+            $nodeclient = $nodeClientID.SelectSingleNode("item/Value[IdentityId='$($node.PlayerId)']" , $ns2)
             $nodeplayer = $nodePIDs.SelectSingleNode("MyObjectBuilder_Identity[PlayerId='$($member.PlayerId)']" , $ns2)
             $findlogin = dir $serverlogs -Include *.log -Recurse | Select-String -Pattern "Peer2Peer_SessionRequest $($nodeclient.ClientId)"
             #check if member is active 
