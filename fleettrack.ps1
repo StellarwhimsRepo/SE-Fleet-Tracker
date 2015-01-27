@@ -17,11 +17,11 @@
     
     Write-Host -ForegroundColor Green "Fleetcheck loading please wait ... "
 
-    [xml]$myXML = Get-Content $filePath
+    [xml]$myXML = Get-Content $filePath -Encoding UTF8
     $ns = New-Object System.Xml.XmlNamespaceManager($myXML.NameTable)
     $ns.AddNamespace("xsi", "http://www.w3.org/2001/XMLSchema-instance")
 
-    [xml]$myXML2 = Get-Content $filePath2
+    [xml]$myXML2 = Get-Content $filePath2 -Encoding UTF8
     $ns2 = New-Object System.Xml.XmlNamespaceManager($myXML2.NameTable)
     $ns2.AddNamespace("xsi", "http://www.w3.org/2001/XMLSchema-instance")
 
