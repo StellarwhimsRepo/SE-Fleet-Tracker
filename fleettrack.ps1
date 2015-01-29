@@ -2,9 +2,11 @@
     $dte = $dte.AddDays(-14)  #this is the number of days a player would have to be inactive (set neg value)
     $serverlogs = 'yoursaverootpath\MyMap'
     $ownedlogs = "yourlogspath\Admin Logs\Audits\Owned\"
+    $nofleetlogs = "yourlogspath\Admin Logs\Audits\Owned\"
 
     $filePath = 'yoursavepath\SANDBOX_0_0_0_.sbs'
     $filePath2 = 'yoursavepath\SANDBOX.sbc'
+
 
     # edit the above values for to match your server!
 
@@ -14,6 +16,8 @@
     $CurrentDateTime = Get-Date -Format "MM-dd-yyyy_HH-mm"
     $ownedfilename = "Owned_Audit_" +$CurrentDateTime+ ".log"
     $ownedpath = $ownedLogs + $ownedfilename
+    $nofleetfilename = "Freelancer_ShipsAudit_" +$CurrentDateTime+ ".log"
+    $nofleetpath = $nofleetLogs + $nofleetfilename
     
     Write-Host -ForegroundColor Green "Fleetcheck loading please wait ... "
 
@@ -41,8 +45,8 @@
         Add-Content -path $ownedpath -Value "=="
         Add-Content -path $ownedpath -Value "[$($faction.Name)] [$($faction.Tag)] Members and ships owned:"
         ForEach($member in $factionmembers){
-            $nodeclient = $nodeClientID.SelectSingleNode("item/Value[IdentityId='$($node.PlayerId)']" , $ns2)
-            $nodeplayer = $nodePIDs.SelectSingleNode("MyObjectBuilder_Identity[PlayerId='$($member.PlayerId)']" , $ns2)
+            $nodeclient = $nodeClientID.SelectSingleNode("item/Value[IdentityId='$($node.IdentityId)']" , $ns2)
+            $nodeplayer = $nodePIDs.SelectSingleNode("MyObjectBuilder_Identity[IdentityId='$($member.PlayerId)']" , $ns2)
             $findlogin = dir $serverlogs -Include *.log -Recurse | Select-String -Pattern "Peer2Peer_SessionRequest $($nodeclient.ClientId)"
             #check if member is active 
                     $matchInfos = @(Select-String -Pattern $regex -AllMatches -InputObject [$($findlogin[-1])])
@@ -83,5 +87,70 @@
         Add-Content -path $ownedpath -Value " "
 
     }
+
+            #list ships and stations owned non faction
+    New-Item -path $nofleetpath -type file
+    Add-Content -path $nofleetpath -Value "[$([DateTime]::Now)] FoH Space Engineers Owned Ships by Freelancer  ==================="
+    $nodes = $myXML.SelectNodes("//SectorObjects/MyObjectBuilder_EntityBase[IsStatic='false' and (@xsi:type='MyObjectBuilder_CubeGrid')]"  , $ns)
+    $flstations = $myXML.SelectNodes("//SectorObjects/MyObjectBuilder_EntityBase[IsStatic='true' and (@xsi:type='MyObjectBuilder_CubeGrid')]"  , $ns)
+    ForEach($freelancePID in $nodefreelancePIDS){
+        $ownercheck = $myXML.SelectNodes("//SectorObjects/MyObjectBuilder_EntityBase[IsStatic='false' and (@xsi:type='MyObjectBuilder_CubeGrid')]/CubeBlocks/MyObjectBuilder_CubeBlock[Owner='$($freelancePID.IdentityId)' and (@xsi:type='MyObjectBuilder_Beacon')]"  , $ns).count
+        $Freelancers = $nodeFactions.SelectNodes("Members/MyObjectBuilder_FactionMember[PlayerId='$($freelancePID.IdentityId)']" , $ns2)
+            If($Freelancers.count -eq 0 -and $ownercheck -ne 0){
+                $factshipcount = 0
+                $factcapcount = 0
+                $nodeclient = $nodeClientID.SelectSingleNode("item/Value[IdentityId='$($freelancePID.IdentityId)']" , $ns2)
+                $nodeplayer = $nodePIDs.SelectSingleNode("MyObjectBuilder_Identity[IdentityId='$($freelancePID.IdentityId)']" , $ns2)
+                $membershipcount = 0
+                Add-Content -path $nofleetpath -Value "[  ]"
+                Add-Content -path $nofleetpath -Value "[$($nodeplayer.DisplayName)] owns the following ships:"
+                ForEach($node in $nodes){
+                    $ownerbeacons = $node.SelectNodes("CubeBlocks/MyObjectBuilder_CubeBlock[(@xsi:type='MyObjectBuilder_Beacon')]", $ns)
+                    IF($ownerbeacons.count -gt 0){
+                        $ownerbeacon=$ownerbeacons | Get-Random
+                        IF ($freelancePID.IdentityId -eq $ownerbeacon.Owner -and $ownerbeacon.CustomName -ne "Capital Core"){
+                            Add-Content -path $nofleetpath -Value "="
+                            Add-Content -path $nofleetpath -Value "$($node.DisplayName) Coords: $($node.PositionAndOrientation.position | Select X) , $($node.PositionAndOrientation.position | Select Y) , $($node.PositionAndOrientation.position | Select Z)"
+                            $factshipcount = $factshipcount + 1
+                            $membershipcount = $membershipcount + 1
+                        }
+
+                        IF ($freelancePID.IdentityId -eq $ownerbeacon.Owner -and $ownerbeacon.CustomName -eq "Capital Core"){
+                            Add-Content -path $nofleetpath -Value "="
+                            Add-Content -path $nofleetpath -Value "$($node.DisplayName) |CAPSHIP| Coords: $($node.PositionAndOrientation.position | Select X) , $($node.PositionAndOrientation.position | Select Y) , $($node.PositionAndOrientation.position | Select Z)"
+                            $factcapcount = $factcapcount + 1
+                            $membershipcount = $membershipcount + 1
+                        }
+                    }
+                }
+                $factstationcount = 0
+                Add-Content -path $nofleetpath -Value "[  ]"
+                Add-Content -path $nofleetpath -Value "[$($nodeplayer.DisplayName)] owns the following stations:"
+                ForEach($station in $flstations){
+                    $ownerbeacons = $station.SelectNodes("CubeBlocks/MyObjectBuilder_CubeBlock[(@xsi:type='MyObjectBuilder_Beacon')]", $ns)
+                    IF($ownerbeacons.count -gt 0){
+                        $ownerbeacon=$ownerbeacons | Get-Random
+                        IF ($freelancePID.IdentityId -eq $ownerbeacon.Owner){
+                            Add-Content -path $nofleetpath -Value "="
+                            Add-Content -path $nofleetpath -Value "$($node.DisplayName) Coords: $($node.PositionAndOrientation.position | Select X) , $($node.PositionAndOrientation.position | Select Y) , $($node.PositionAndOrientation.position | Select Z)"
+                            $factstationcount = $factstationcount + 1
+                            $membershipcount = $membershipcount + 1
+                        }
+
+                        
+                    }
+                }
+                Add-Content -path $nofleetpath -Value "[$membershipcount] Total owned grids."
+                Add-Content -path $nofleetpath -Value "====="
+                Add-Content -path $nofleetpath -Value "[$($freelancePID.DisplayName)] Freelancer Summary"
+                Add-Content -path $nofleetpath -Value "Ships Detected for [$($freelancePID.DisplayName)] : $factshipcount"
+                Add-Content -path $nofleetpath -Value "Capital Ships Detected for [$($freelancePID.DisplayName)] : $factcapcount"
+                Add-Content -path $nofleetpath -Value "Stations Detected for [$($freelancePID.DisplayName)] : $factionstationcount"
+
+                Add-Content -path $nofleetpath -Value " "
+                Add-Content -path $nofleetpath -Value " "
+            }
+    }
+
 
     $myXML2.Save($filePath2)
